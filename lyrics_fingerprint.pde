@@ -14,7 +14,7 @@ String[][] matrix;
 int colorshift = 0;
 
 void setup() {
-  String[] file = loadStrings("test.txt");
+  String[] file = loadStrings("lyrics.txt");
   String[] lyrics = words(file, true);
   matrix = genMatrix(lyrics);
   size(1000, 1000);
