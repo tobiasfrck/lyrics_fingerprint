@@ -6,7 +6,6 @@
 //https://song-visualizer.firebaseapp.com/intro
 //-----------------
 
-import java.util.Map;
 import java.util.ArrayList;
 String[][] save;
 HashMap<String, int[]> colorhashmap;
@@ -18,7 +17,7 @@ void setup() {
   String[] lyrics = words(file, true);
   matrix = genMatrix(lyrics);
   size(1000, 1000);
-  colorhashmap = genHashmap(words(file, true));
+  colorhashmap = genHashmap(lyrics);
   colorMode(HSB);
   //output2dtxt(matrix);
   save2dtxt(matrix);
@@ -28,8 +27,8 @@ void setup() {
   //This creates the blur-effect while having a sharp center for all significent pixels
   for (int i = 0; i<2; i++) {
     applyBlur(3);
-    drawMatrix(matrix, colorhashmap);
     println("Applied filter: " + (i+1) + " times.");
+    drawMatrix(matrix, colorhashmap);
   }
   frameRate(24); //only useful for the colorshifting-feature
   saveImage(); //export final fingerprint
@@ -41,27 +40,27 @@ void draw() {
   //drawMatrix(matrix, colorhashmap); //uncomment for colorshifting
 }
 
-//Draws
+//Draws the matrix
 void drawMatrix(String[][] a, HashMap<String, int[]> colormap) {
-  float x = a[0].length;
-  float y = a[0].length;
-  println(x);
-  float abstand = 0f;
-  float xsize = (float(width)/x)-abstand;
-  float ysize = (float(height)/y)-abstand;
-  println("ysize: " + ysize + " xsize: "+xsize);
+  int x = a[0].length;
+  int y = a[0].length;
+  println("Points to draw: " + x + "x" + y + ": " + (x*y));
+  float padding = 0f;
+  float xsize = (float(width)/x)-padding;
+  float ysize = (float(height)/y)-padding;
+  println("Pixel-Height: " + ysize + " Pixel-Width: "+xsize);
   noStroke();
   for (int i = 0; i<x; i++) {
     for (int k = 0; k<y; k++) {
-      textAlign(CENTER);
       int[] colorattr=colormap.get(a[i][k]);
-      if (colorattr[1]!=0) {
+      if (colorattr!=null && colorattr[1]!=0) {
         fill(color((colorattr[0]+colorshift)%255, 255, colorattr[1]));
         rect((float(width)/x)*i, (float(height)/y)*k, xsize, ysize);
       }
     }
   }
   println("Drawing complete.");
+  println("------------");
 }
 
 void applyBlur(int a) {
@@ -74,10 +73,12 @@ void saveImage() {
 //generates colors for all words; colorshift is applied when drawing
 HashMap<String, int[]> genHashmap(String[] lyrics) {
   HashMap<String, int[]> output = new HashMap<String, int[]>();
+  println("------------");
   println("Before reduction: "+lyrics.length);
   //This is needed atm since the amount of unique words determines the color range.
   lyrics = uniqueLyrics(lyrics);
   println("After reduction: " + lyrics.length);
+  println("------------");
 
   float colorstep = 255f/float(lyrics.length);
   for (int i = 0; i<lyrics.length; i++) {
@@ -86,14 +87,11 @@ HashMap<String, int[]> genHashmap(String[] lyrics) {
       int brightness=255; //Brightness is fixed atm but could be used.
       int[] colorattr = {colour, brightness};
       output.put(lyrics[i], colorattr);
-      println("Word: " + lyrics[i] + " Color: " + colour);
+      println("Word: " + lyrics[i] + ", Color: " + colour);
     }
   }
-  
-  //TODO: Remove this
-  int[] blank = {0, 0};
-  output.put("blank", blank);
-  
+  println("------------");
+
   return output;
 }
 
@@ -112,13 +110,13 @@ String[] uniqueLyrics(String[] lyrics) {
       list.add(lyrics[i]);
     }
   }
-  
+
   //Conversion to String[]
   String[] output = new String[list.size()];
   for (int i = 0; i<list.size(); i++) {
     output[i]=list.get(i);
   }
-  
+
   return list.toArray(new String[0]);
 }
 
@@ -129,9 +127,6 @@ String[][] genMatrix(String[] lyrics) {
     for (int j = 0; j<lengthl; j++) {
       if (lyrics[i].equals(lyrics[j])) {
         output[i][j]=lyrics[i];
-      } else {
-        //TODO: Remove
-        output[i][j]="blank";
       }
     }
   }
@@ -145,13 +140,12 @@ String[][] genMatrix(String[] lyrics) {
 String[][] removeSingles(String[][] input) {
   for (int i = 0; i<input.length-1; i++) {
     for (int j = 0; j<input[0].length-1; j++) {
-      //TODO: replace blank
-      if (!input[i][j].equals("blank")) { //current pixel is colored
-        if (input[i+1][j+1].equals("blank")) { //pixel bottom right is not filled.
-          if (i>0&&j>0&&input[i-1][j-1].equals("blank")) { //pixel top left is not filled.
-            input[i][j] = "blank";
+      if (input[i][j]!=null) { //current pixel is colored
+        if (input[i+1][j+1]==null) { //pixel bottom right is not filled.
+          if (i>0&&j>0&&input[i-1][j-1]==null) { //pixel top left is not filled.
+            input[i][j] = null;
           } else if (i==0 || j==0) {
-            input[i][j] = "blank";
+            input[i][j] = null;
           }
         }
       }
@@ -180,12 +174,14 @@ String[] words(String[] input, Boolean mode) {
     String between = trim(input[i]);
     output=output + between + " ";
   }
-  
   output = trim(output).toLowerCase();
+
   if (mode) {
     output = cleartext(output);
-    println(output);
   }
+  
+  println("---processed lyrics---");
+  println(output);
 
   String[] outputa = split(output, " ");
   for (int i = 0; i<outputa.length; i++) {
@@ -194,7 +190,7 @@ String[] words(String[] input, Boolean mode) {
   return outputa;
 }
 
-//Replaces german and french chars; removes anything that is not an alphabetic character 
+//Replaces german and french chars; removes anything that is not an alphabetic character
 String cleartext(String textv) {
   textv=replaceauo(textv);
   for (int i=0; i<textv.length(); i++) {
