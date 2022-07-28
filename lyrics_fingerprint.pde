@@ -11,7 +11,7 @@ import java.util.ArrayList;
 String[][] save;
 HashMap<String, int[]> colorhashmap;
 String[][] matrix;
-int colorshift = 0;
+int colorshift = 0; // used for shifting colors around
 
 void setup() {
   String[] file = loadStrings("lyrics.txt");
@@ -20,25 +20,28 @@ void setup() {
   size(1000, 1000);
   colorhashmap = genHashmap(words(file, true));
   colorMode(HSB);
+  //output2dtxt(matrix);
+  save2dtxt(matrix);
   background(20);
   drawMatrix(matrix, colorhashmap);
-  //filter(INVERT);
-  for(int i = 0; i<2;i++) {
+
+  //This creates the blur-effect while having a sharp center for all significent pixels
+  for (int i = 0; i<2; i++) {
     applyBlur(3);
     drawMatrix(matrix, colorhashmap);
-    //filter(INVERT);
     println("Applied filter: " + (i+1) + " times.");
   }
-  frameRate(24);
-  saveImage();
+  frameRate(24); //only useful for the colorshifting-feature
+  saveImage(); //export final fingerprint
 }
 
 void draw() {
-  //background(20);
+  //background(20); //uncomment for colorshifting
   colorshift+=1;
-  //drawMatrix(matrix, colorhashmap);
+  //drawMatrix(matrix, colorhashmap); //uncomment for colorshifting
 }
 
+//Draws
 void drawMatrix(String[][] a, HashMap<String, int[]> colormap) {
   float x = a[0].length;
   float y = a[0].length;
@@ -56,45 +59,47 @@ void drawMatrix(String[][] a, HashMap<String, int[]> colormap) {
         fill(color((colorattr[0]+colorshift)%255, 255, colorattr[1]));
         rect((float(width)/x)*i, (float(height)/y)*k, xsize, ysize);
       }
-      //fill(255);
-      //strokeWeight(0.25f);
-      if ((height/y) >= 20 && (width/x) >= 60) {
-       //text(a[i][k], ((width/x)*i)+(xsize/2), ((height/y)*k)+(ysize/2)+abstand);
-      }
     }
   }
-  println("Analyse fertiggestellt.");
-  
+  println("Drawing complete.");
 }
+
 void applyBlur(int a) {
   filter(BLUR, a);
 }
 void saveImage() {
-  save("test.png");
+  save("output.png");
 }
 
+//generates colors for all words; colorshift is applied when drawing
 HashMap<String, int[]> genHashmap(String[] lyrics) {
   HashMap<String, int[]> output = new HashMap<String, int[]>();
-  println("Vorher: "+lyrics.length);
+  println("Before reduction: "+lyrics.length);
+  //This is needed atm since the amount of unique words determines the color range.
   lyrics = uniqueLyrics(lyrics);
-  println("Nachher: " + lyrics.length);
+  println("After reduction: " + lyrics.length);
+
   float colorstep = 255f/float(lyrics.length);
   for (int i = 0; i<lyrics.length; i++) {
     int colour = int(colorstep*i);
     if (output.get(lyrics[i])==null) {
-      int brightness=255;
+      int brightness=255; //Brightness is fixed atm but could be used.
       int[] colorattr = {colour, brightness};
       output.put(lyrics[i], colorattr);
-      println("Wort: " + lyrics[i] + " Farbe: " + colour);
+      println("Word: " + lyrics[i] + " Color: " + colour);
     }
   }
+  
+  //TODO: Remove this
   int[] blank = {0, 0};
-  output.put("nullpe", blank);
+  output.put("blank", blank);
+  
   return output;
 }
 
+//makes sure lyrics only contains each word once
+//TODO: replace with hashmap
 String[] uniqueLyrics(String[] lyrics) {
-
   ArrayList<String> list = new ArrayList<String>();
   for (int i = 0; i<lyrics.length; i++) {
     Boolean testin = false;
@@ -107,12 +112,16 @@ String[] uniqueLyrics(String[] lyrics) {
       list.add(lyrics[i]);
     }
   }
+  
+  //Conversion to String[]
   String[] output = new String[list.size()];
   for (int i = 0; i<list.size(); i++) {
     output[i]=list.get(i);
   }
+  
   return list.toArray(new String[0]);
 }
+
 String[][] genMatrix(String[] lyrics) {
   String[][] output = new String[lyrics.length][lyrics.length];
   int lengthl = lyrics.length;
@@ -121,23 +130,28 @@ String[][] genMatrix(String[] lyrics) {
       if (lyrics[i].equals(lyrics[j])) {
         output[i][j]=lyrics[i];
       } else {
-        output[i][j]="nullpe";
+        //TODO: Remove
+        output[i][j]="blank";
       }
     }
   }
 
+  //uncomment to remove single pixels
   //output = removeSingles(output);
   return output;
 }
+
+//this is a filter to remove single pixels; clears up image
 String[][] removeSingles(String[][] input) {
-  for (int i = 0;i<input.length-1;i++) {
-    for (int j = 0;j<input[0].length-1;j++) {
-      if(!input[i][j].equals("nullpe")) { //aktueller Pixel ist gefüllt
-        if(input[i+1][j+1].equals("nullpe")) { //Pixel unten rechts ist nicht gefüllt.
-          if(i>0&&j>0&&input[i-1][j-1].equals("nullpe")) { //Pixel oben links ist nicht gefüllt.
-            input[i][j] = "nullpe";
-          } else if(i==0 || j==0) {
-            input[i][j] = "nullpe";
+  for (int i = 0; i<input.length-1; i++) {
+    for (int j = 0; j<input[0].length-1; j++) {
+      //TODO: replace blank
+      if (!input[i][j].equals("blank")) { //current pixel is colored
+        if (input[i+1][j+1].equals("blank")) { //pixel bottom right is not filled.
+          if (i>0&&j>0&&input[i-1][j-1].equals("blank")) { //pixel top left is not filled.
+            input[i][j] = "blank";
+          } else if (i==0 || j==0) {
+            input[i][j] = "blank";
           }
         }
       }
@@ -145,22 +159,28 @@ String[][] removeSingles(String[][] input) {
   }
   return input;
 }
+
+
+//I dont currently know why but this removes lyrics such as:
+//"La La"
 String[] removeDoubleLyrics(String[] lyrics) {
   ArrayList<String> list = new ArrayList<String>();
   for (int i = 0; i<lyrics.length-1; i++) {
-    if(!lyrics[i].equals(lyrics[i+1])) {
+    if (!lyrics[i].equals(lyrics[i+1])) {
       list.add(lyrics[i]);
     }
   }
   return list.toArray(new String[0]);
 }
+
+//This removes weird spaces, makes text lowercase and if wanted uses cleartext
 String[] words(String[] input, Boolean mode) {
   String output = "";
   for (int i = 0; i<input.length; i++) {
     String between = trim(input[i]);
     output=output + between + " ";
   }
-  //println(output);
+  
   output = trim(output).toLowerCase();
   if (mode) {
     output = cleartext(output);
@@ -173,8 +193,9 @@ String[] words(String[] input, Boolean mode) {
   }
   return outputa;
 }
+
+//Replaces german and french chars; removes anything that is not an alphabetic character 
 String cleartext(String textv) {
-  textv=textv.toLowerCase();
   textv=replaceauo(textv);
   for (int i=0; i<textv.length(); i++) {
     if (!((int(textv.charAt(i))<123 && int(textv.charAt(i))>96)|| textv.charAt(i)==32) ) {
@@ -184,6 +205,8 @@ String cleartext(String textv) {
   }
   return textv;
 }
+
+//Replaces german and french chars
 String replaceauo(String text) {
   String[] original = {"ä", "ö", "ü", "à", "á", "â", "ã", "è", "é", "ê", "ë", "ß"};
   String[] replace = {"ae", "oe", "ue", "a", "a", "a", "a", "e", "e", "e", "e", "ss"};
@@ -192,17 +215,38 @@ String replaceauo(String text) {
   }
   return text;
 }
+
 void output(String[] array) {
   for (int i = 0; i<array.length; i++) {
     println(i+": "+array[i]);
   }
 }
+
 void output2dtxt(String[][] array) {
   for (int i = 0; i<array[0].length; i++) {
     String output = "";
     for (int j = 0; j<array[i].length; j++) {
-      output=output+array[i][j];
+      if (j!=array[i].length-1) {
+        output=output+array[i][j]+"|";
+      } else {
+        output=output+array[i][j];
+      }
     }
-    println(i+": "+output);
+    println(output);
   }
+}
+void save2dtxt(String[][] array) {
+  String[] outputArray = new String[array[0].length];
+  for (int i = 0; i<array[0].length; i++) {
+    String output = "";
+    for (int j = 0; j<array[i].length; j++) {
+      if (j!=array[i].length-1) {
+        output=output+array[i][j]+"|";
+      } else {
+        output=output+array[i][j];
+      }
+    }
+    outputArray[i]=output;
+  }
+  saveStrings("2darray.txt", outputArray);
 }
