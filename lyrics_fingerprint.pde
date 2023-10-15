@@ -11,6 +11,7 @@ String[][] save;
 HashMap<String, int[]> colorhashmap;
 String[][] matrix;
 int colorshift = 0; // used for shifting colors around
+PGraphics pg;
 
 void setup() {
   String[] file = loadStrings("lyrics.txt");
@@ -18,10 +19,13 @@ void setup() {
   matrix = genMatrix(lyrics);
   size(1000, 1000);
   colorhashmap = genHashmap(lyrics);
-  colorMode(HSB);
+  pg = createGraphics(width, height);
+  colorMode(HSB,255);
+  pg.beginDraw();
   //output2dtxt(matrix);
   save2dtxt(matrix);
-  background(20);
+  //pg.background(20);
+  pg.beginDraw();
   drawMatrix(matrix, colorhashmap);
 
   //This creates the blur-effect while having a sharp center for all significent pixels
@@ -31,13 +35,23 @@ void setup() {
     drawMatrix(matrix, colorhashmap);
   }
   frameRate(24); //only useful for the colorshifting-feature
+  pg.endDraw();
+  image(pg,0,0);
   saveImage(); //export final fingerprint
 }
 
 void draw() {
-  //background(20); //uncomment for colorshifting
+  //uncomment the following for colorshifting
+  /* 
+  pg.endDraw();
+  background(20); 
   colorshift+=1;
-  //drawMatrix(matrix, colorhashmap); //uncomment for colorshifting
+  pg.beginDraw();
+  pg.clear();
+  drawMatrix(matrix, colorhashmap);
+  pg.endDraw();
+  image(pg,0,0);
+  */
 }
 
 //Draws the matrix
@@ -49,13 +63,13 @@ void drawMatrix(String[][] a, HashMap<String, int[]> colormap) {
   float xsize = (float(width)/x)-padding;
   float ysize = (float(height)/y)-padding;
   println("Pixel-Height: " + ysize + " Pixel-Width: "+xsize);
-  noStroke();
+  pg.noStroke();
   for (int i = 0; i<x; i++) {
     for (int k = 0; k<y; k++) {
       int[] colorattr=colormap.get(a[i][k]);
       if (colorattr!=null && colorattr[1]!=0) {
-        fill(color((colorattr[0]+colorshift)%255, 255, colorattr[1]));
-        rect((float(width)/x)*i, (float(height)/y)*k, xsize, ysize);
+        pg.fill(color((colorattr[0]+colorshift)%255, 255, colorattr[1]));
+        pg.rect((float(width)/x)*i, (float(height)/y)*k, xsize, ysize);
       }
     }
   }
@@ -64,10 +78,10 @@ void drawMatrix(String[][] a, HashMap<String, int[]> colormap) {
 }
 
 void applyBlur(int a) {
-  filter(BLUR, a);
+  pg.filter(BLUR, a);
 }
 void saveImage() {
-  save("output.png");
+  pg.save("output.png");
 }
 
 //generates colors for all words; colorshift is applied when drawing
