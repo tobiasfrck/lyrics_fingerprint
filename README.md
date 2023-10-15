@@ -12,7 +12,7 @@ Then this sketchs filters some special characters, cleans up the image, adds col
 
 ## Example
 ### Never Gonna Give You Up by Rick Astley
-<img src="https://github.com/tobiasfrck/lyrics_fingerprint/blob/main/examples/Never_Gonna_Give_You_Up_Fingerprint.png" alt="lyrics fingerprint of the song Never Gonna Give You Up by Rick Astley" width="40%">
+<img src="https://github.com/tobiasfrck/lyrics_fingerprint/blob/main/examples/Never_Gonna_Give_You_Up_Fingerprint_Transparent.png" alt="lyrics fingerprint of the song Never Gonna Give You Up by Rick Astley" width="40%">
 
 
 ## Inspiration
