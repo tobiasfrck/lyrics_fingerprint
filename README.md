@@ -7,8 +7,8 @@ This processing sketch creates a fingerprint for lyrics.
 This sketch creates a diagram where on the X-axis and Y-axis are the lyrics of a song or any other text.
 Everytime x and y are the same word, the sketch draws a dot.
 This is how to make a fingerprint or self-similarity matrix of a song lyric or text.
-A very good example is the web-version I linked [here](#inspiration).
-Then this sketchs filters some special characters, cleans up the image, adds colors and adds some blur to make it look pretty.
+A very good example of how this works is the web-version I linked [here](#inspiration).
+Then this sketch filters some special characters, cleans up the image, adds colors and adds some blur to make it look pretty.
 
 ## Example
 ### Never Gonna Give You Up by Rick Astley
@@ -19,5 +19,5 @@ Then this sketchs filters some special characters, cleans up the image, adds col
 Pop Music is Stuck on Repeat | Colin Morris | TEDxPenn
 https://www.youtube.com/watch?v=_tjFwcmHy5M
 
-Web-version from someone else:
+Web-version by someone else:
 https://song-visualizer.firebaseapp.com/intro
